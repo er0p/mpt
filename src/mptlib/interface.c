@@ -193,13 +193,14 @@ void interface_load(char *filename, tunnel_type * tunp)
     inet_pton(AF_INET, lstr, &tunp->ip4);
     lstr = trim((char *) strtok(NULL, "/#\n"));
     tunp->ip4len = atoi(lstr);
-
+#if 0
     sprintf(conf_key, "%s:ipv6_addr", section);
     read_str = iniparser_getstring(conf, conf_key, "FE::1/0");
     lstr = trim((char *) strtok(read_str, "/#\n"));
     inet_pton(AF_INET6, lstr, &tunp->ip6);
     lstr = trim((char *) strtok(NULL, "/#\n"));
     tunp->ip6len = atoi(lstr);
+#endif
     } // for (index...
 
 DEBUG("Tunnels are configured.\n");
