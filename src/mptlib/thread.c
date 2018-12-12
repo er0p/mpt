@@ -389,10 +389,19 @@ void * cmd_read_thread(void *arg)
                 cp = mp_global_conn;
                 while(cp) {
                     for(i=0; i<cp->path_count; i++) {
-                        if(cp->mpath[i].last_keepalive == 0) cp->mpath[i].last_keepalive = time(NULL); // allow some converge time after startup
-                        else if(cp->mpath[i].deadtimer > 0 && cp->mpath[i].last_keepalive + cp->mpath[i].deadtimer < time(NULL) &&
+			    time_t curr_time = time(NULL);
+                        if(cp->mpath[i].last_keepalive == 0) cp->mpath[i].last_keepalive = curr_time; // allow some converge time after startup
+                        else if(cp->mpath[i].deadtimer > 0 && cp->mpath[i].last_keepalive + cp->mpath[i].deadtimer < curr_time &&
                            cp->mpath[i].status == STAT_OK) {
                             printf("no keepalive received\n");
+                            printf("path i %d, dt %d > 0, last_ka %d < %d, status %d\n",
+					i,
+				       	cp->mpath[i].deadtimer,
+					cp->mpath[i].last_keepalive,
+					curr_time,
+					cp->mpath[i].status
+					);
+			    //printf("path_change_status to STAT_PATH_DOWN\n");
                             path_change_status(cp, i, STAT_PATH_DOWN);
                         }
                     }

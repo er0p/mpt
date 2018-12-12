@@ -6,7 +6,7 @@
  * @copyright Project maintained by Almasi, Bela; Debrecen, Hungary
  */
 
-//#define MPT_DEBUG
+#define MPT_DEBUG
 
 #include "multipath.h"
 #include "mp_local.h"
@@ -195,8 +195,11 @@ int handshake(connection_type *conn, bit_32 *peer_addr, bit_8 cmd, char status, 
     char auth_len = 0;
     char cmdbuf[SIZE_DGRAM], rbuf[SIZE_DGRAM];
     int i, ret, sh, sock, blen;
-    unsigned int csize, socksize = sizeof(struct sockaddr_in6);
-    struct sockaddr_in6 saddr, caddr;
+    //unsigned int csize, socksize = sizeof(struct sockaddr_in6);
+    unsigned int csize, socksize = sizeof(struct sockaddr_in);
+    //struct sockaddr_in6 saddr, caddr;
+    //struct sockaddr_in6 saddr, caddr;
+    struct sockaddr_in saddr, caddr;
     bit_32 size_buff;
 
     if(!conn) return 0;
@@ -224,9 +227,12 @@ int handshake(connection_type *conn, bit_32 *peer_addr, bit_8 cmd, char status, 
     blen = auth_len+44;
 
     sock = tun.cmd_socket_rcv; // cmd  socket
-    saddr.sin6_family = AF_INET6;
-    memcpy(&saddr.sin6_addr,  peer_addr, SIZE_IN6ADDR);
-    saddr.sin6_port = htons(conn->cmd_port_remote);
+    //saddr.sin6_family = AF_INET6;
+    saddr.sin_family = AF_INET;
+    //memcpy(&saddr.sin6_addr,  peer_addr, SIZE_IN6ADDR);
+    memcpy(&saddr.sin_addr,  peer_addr, SIZE_INADDR);
+    saddr.sin_port = htons(conn->cmd_port_remote);
+    //saddr.sin6_port = htons(conn->cmd_port_remote);
     csize = socksize;
 
     authSet(conn, cmdbuf, blen);
@@ -235,7 +241,8 @@ int handshake(connection_type *conn, bit_32 *peer_addr, bit_8 cmd, char status, 
     while ((i<=5) && (ret<0)) {
         if (i) usleep(2000);
         ret = sendto(sock, cmdbuf, blen, 0, (struct sockaddr *)&saddr, socksize);
-    DEBUG("handshake send round1 ret:%d errno%d\n", ret, errno);
+    DEBUG("handshake send round1 ret:%d errno%d(%s)\n", ret, errno, strerror(errno));
+        if (i) usleep(2000);
         ret = getcmd(sock, rbuf, blen, 0, (struct sockaddr *)&caddr, &csize, 500 );
         i++;
     }
@@ -263,7 +270,7 @@ int handshake(connection_type *conn, bit_32 *peer_addr, bit_8 cmd, char status, 
     while ((i<=5) && (ret<0)) {
         if (i) usleep(2000);
         ret = sendto(sock, cmdbuf, blen, 0, (struct sockaddr *)&saddr, socksize);
-    DEBUG("handshake send round3 ret:%d errno%d\n", ret, errno);
+    DEBUG("handshake send round3 ret:%d errno%d(%s)\n", ret, errno, strerror(errno));
         ret = getcmd(sock, rbuf, blen, 0, (struct sockaddr *)&caddr, &csize, 500);
         i++;
     }
@@ -377,7 +384,8 @@ void peer_route(char *op, path_type *peer)
     inet_ntop(af, &peer->ip_remote[start], destination_host, 128);
     inet_ntop(af, &peer->ip_gw[start], gateway, 128);
     sprintf(command, "bin/mpt_peer_routes.sh %s %d %s %s %s", op, peer->ip_version, destination_host, gateway, peer->interface);
-    system(command);
+    //getchar();
+    //system(command);
 
 }
 
@@ -395,7 +403,7 @@ void add_routes(connection_type* conn)
 // ********** Routes for the PEERS *************
   for (j=0; j< conn->path_count; ++j) {
     peer = &conn->mpath[j];
-DEBUG("add_routes peer_route %d\n", j);
+DEBUG("%s[%d],add_routes peer_route %d\n", __func__, __LINE__, j);
     peer_route("add", peer);
   }
 
@@ -407,7 +415,7 @@ DEBUG("add route to the remote tunnel ip");
     sprintf((char *)&tunnelpeer.interface, "%s", (char *)&tun.interface);
     peer_route("add", &tunnelpeer);
 
-DEBUG("add_routes after peer_route\n");
+DEBUG("%s[%d], add_routes after peer_route\n", __func__, __LINE__);
 // Routes for the NETWORKS **********************
   for(j=0; j < conn->network_count; ++j){
 
@@ -428,6 +436,7 @@ DEBUG("add_routes network_route %d\n", j);
     inet_ntop(af, &network->destination[start], destination_network, 128);
     inet_ntop(af, &conn->ip_remote[start], gateway, 128);
     sprintf(command, "bin/mpt_routes.sh add %d %s %d %s", network->version, destination_network, network->destination_prefix_length, gateway);
+    //getchar();
     system(command);
   }
 }

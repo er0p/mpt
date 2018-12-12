@@ -13,8 +13,8 @@ if [ $# -eq 1 ]; then
 else
   exit 1
 fi
-# echo $INTERFACE_IP
+#echo $INTERFACE_IP
 
-
-nmcli -f IP4 dev list | grep "ip =" | grep $INTERFACE_IP  | cut -d= -f3 |  head -1
+ip r | grep default | grep ${INTERFACE_IP} | awk '{print $3}'
+#nmcli -f IP4 dev list | grep "ip =" | grep $INTERFACE_IP  | cut -d= -f3 |  head -1
 

@@ -9,7 +9,7 @@ GATEWAY=$5
 if [ "$METHOD" == "add" ]; then
   if [ "$VERSION" == "4" ]; then 
     route add -net $IP/$PREFIX gw $GATEWAY
-    echo "route add -net $IP/$PREFIX gw $GATEWAY"
+    echo "`basename $0`: route add -net $IP/$PREFIX gw $GATEWAY"
   elif [ "$VERSION" == "6" ]; then 
     ip -6 route add $IP/$PREFIX via $GATEWAY
     echo "ip -6 route add $IP/$PREFIX via $GATEWAY"

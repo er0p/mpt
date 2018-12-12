@@ -156,7 +156,7 @@ DEBUG("Starting globl IP address reading from %s (interface: %s )\n", server, in
         fcntl(sfd, F_SETFL, O_NONBLOCK);
         inet_ntop(AF_INET, rp->ai_addr, serverip, 128);
     DEBUG("Serverip: %s\n", serverip);
-        if (gateway) { sprintf(cmd, "route add -host %s gw %s dev %s ", serverip, gateway, intname); system(cmd);}
+        if (gateway) { sprintf(cmd, "%s: route add -host %s gw %s dev %s ", __func__, serverip, gateway, intname); system(cmd);}
         connect(sfd, rp->ai_addr, rp->ai_addrlen);
         usleep(5000000);
         fcntl(sfd, F_SETFL, 0);
@@ -284,8 +284,10 @@ DEBUG("Starting globl IP address reading from resolver1.opendns.com (interface: 
         setsockopt(sfd, SOL_SOCKET, SO_RCVTIMEO, (char*)&tv, sizeof(tv));
         memset(rbuf, 0, sizeof(rbuf));
         blen = 0;
-        blen = recv(sfd, rbuf, sizeof(rbuf), 0); //
+        // blen = recv(sfd, rbuf, sizeof(rbuf), 0); //
         // blen = recvfrom(sfd, rbuf, (size_t) sizeof(rbuf), 0, (struct sockaddr *) &peer, (socklen_t *)&psize);
+	socklen_t ps = (socklen_t) sizeof(myip_resolver);
+        blen = recvfrom(sfd, rbuf, (size_t) sizeof(rbuf), 0, (struct sockaddr *) &myip_resolver, &ps);
         if (blen>0) break; // got the answer
         printf(" get_globalip: trying to read global ip address again (Int: %s)... \n", intname);
         usleep(10000);
@@ -423,7 +425,7 @@ void conn_print_item(FILE * stream, connection_type * conn)
     //fprintf(stream, "    Authentication code   : "); printHash(conn->auth_key, keySize(conn->auth_type));
     fprintf(stream, "    Connection reorder win: %d\n", conn->reorder_window);
     fprintf(stream, "    Max. delay in rcv.buff: %d(sec) %d(msec)\n", (int)conn->max_buffdelay.tv_sec, (int)conn->max_buffdelay.tv_usec/1000);
-    fprintf(stream, "    Connection status     : %d\n", conn->status);
+    fprintf(stream, "    Connection status     : %d (0x%x)\n", conn->status, conn->status);
     if (conn->path_count <= 0)
 	return;
 
@@ -464,8 +466,7 @@ void conn_print_item(FILE * stream, connection_type * conn)
 //	fprintf(stream, "     Path window size   : %d\n", p->packet_max);
     fprintf(stream, "     Keepalive time     : %d\n", p->keepalive);
     fprintf(stream, "     Dead timer         : %d\n", p->deadtimer);
-	fprintf(stream, "     Path Status        : %d\n", p->status);
-
+	fprintf(stream, "     Path Status        : %d (0x%x)\n",p->status, p->status);
 	p++;
     }
     fprintf(stream, "\n");
@@ -655,7 +656,8 @@ void connection_load_dir(connection_type * conn_start)
 	fprintf(stderr, "Failed to open directory");
 	return;
     }
-    conn_load("conf.template", &template_conn);
+    //conn_load("conf.template", &template_conn);
+    conn_load("ipv4.conf", &template_conn);
 
     while ((ep = readdir(dp))) {
 	// open only .conf files

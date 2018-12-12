@@ -11,7 +11,7 @@ IFACE=$5
 if [ "$METHOD" == "add" ]; then
   if [ "$VERSION" == "4" ]; then 
     route add -host $PEER_IP gw $GATEWAY dev $IFACE
-    echo "route add -host $PEER_IP gw $GATEWAY dev $IFACE"
+    echo "`basename $0`: route add -host $PEER_IP gw $GATEWAY dev $IFACE"
   elif [ "$VERSION" == "6" ]; then 
     route -A inet6 add ${PEER_IP}/128 gw $GATEWAY dev $IFACE
     echo "route -A inet6 add  ${PEER_IP}/128 gw $GATEWAY dev $IFACE"

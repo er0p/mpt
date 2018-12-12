@@ -81,6 +81,37 @@ DEBUG("Starting tunnel threads\n");
  */
 int cmd_open_socket( tunnel_type *tunp )
 {
+    int sock;
+    unsigned int socklen;
+    struct sockaddr_in sockaddr;
+    int off = 0;
+
+    socklen = sizeof(sockaddr);
+    sockaddr.sin_family = AF_INET;
+   // memcpy(&(sockaddr.sin_addr), &inaddr_any, SIZE_IN6ADDR);
+    sockaddr.sin_addr.s_addr = htonl(INADDR_ANY);
+
+    sockaddr.sin_port   = htons(tunp->cmd_port_rcv); // ************* CMD server socket
+    if ((sock = socket(AF_INET, SOCK_DGRAM, 0)) < 0)
+            reterror("Socket creation error.", errno);
+
+//    setsockopt(sock6, IPPROTO_IPV6, IPV6_V6ONLY, (char *)&off, sizeof off);
+    // IPV6_only is turned off, so this socket will be used for IPv4 too.
+
+    if (bind(sock, (struct sockaddr *) &sockaddr, socklen) <0) {
+            close(sock);
+            exerror("CMD server socket bind error.", errno);
+    }
+    if (tunp->cmd_port_rcv == 0) { // The port number was not known.
+            getsockname(sock, (struct sockaddr *) &sockaddr, &socklen);
+            tunp->cmd_port_rcv = ntohs(sockaddr.sin_port);
+    }
+    tunp->cmd_socket_rcv = sock;
+    return(0);
+}
+
+int cmd_open_socket_v6( tunnel_type *tunp )
+{
     int sock6;
     unsigned int socklen;
     struct sockaddr_in6 sockaddr6;
@@ -126,7 +157,6 @@ int cmd_open_socket( tunnel_type *tunp )
 
     return(0);
 }
-
 
 /**
  * Stop and close the tunnel device
