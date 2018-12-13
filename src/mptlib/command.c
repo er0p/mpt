@@ -239,7 +239,7 @@ caddr.sin6_port = 0;
 //if ( bind(sock, (struct sockaddr*)&caddr, sizeof(caddr)) == -1 ) {
 //	DEBUG("bind() failed, errno: %d (%s)\n", errno, strerror(errno));
 //	close(sock);
-	return 0;
+//	return 0;
 //}
 #endif
 //    *inet_ntop(int af, const void *src, char *dst, socklen_t size);
@@ -250,7 +250,7 @@ caddr.sin6_port = 0;
     if( inet_ntop(AF_INET6, &(caddr.sin6_addr), buf1, INET6_ADDRSTRLEN) &&
 	inet_ntop(AF_INET6, &(saddr.sin6_addr), buf2, INET6_ADDRSTRLEN) 
       ) {
-	    DEBUG("src: [%s] -> dst: [%s]\n", buf1, buf2);
+	    DEBUG("! ! ! src: [%s] -> dst: [%s]\n", buf1, buf2);
     }
 	    
     i = 0; ret = -1;
