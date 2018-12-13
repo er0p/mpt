@@ -6,7 +6,7 @@
  * @copyright Project maintained by Almasi, Bela; Debrecen, Hungary
  */
 
-//#define MPT_DEBUG
+#define MPT_DEBUG
 
 #include "multipath.h"
 #include "mp_local.h"
@@ -233,7 +233,7 @@ int handshake(connection_type *conn, bit_32 *peer_addr, bit_8 cmd, char status, 
 
     i = 0; ret = -1;
     while ((i<=5) && (ret<0)) {
-        if (i) usleep(2000);
+        if (i) usleep(5000);
         ret = sendto(sock, cmdbuf, blen, 0, (struct sockaddr *)&saddr, socksize);
     DEBUG("handshake send round1 ret:%d errno%d\n", ret, errno);
         ret = getcmd(sock, rbuf, blen, 0, (struct sockaddr *)&caddr, &csize, 500 );
@@ -377,7 +377,7 @@ void peer_route(char *op, path_type *peer)
     inet_ntop(af, &peer->ip_remote[start], destination_host, 128);
     inet_ntop(af, &peer->ip_gw[start], gateway, 128);
     sprintf(command, "bin/mpt_peer_routes.sh %s %d %s %s %s", op, peer->ip_version, destination_host, gateway, peer->interface);
-    system(command);
+    //system(command);
 
 }
 

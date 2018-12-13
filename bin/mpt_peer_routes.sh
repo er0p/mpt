@@ -2,6 +2,7 @@
 # ***************** Csak IPv4 egyelore *****************
 # beallitja/torli a path-on a peer-hez vezeto routing tabla bejegyzest
 
+
 METHOD=$1
 VERSION=$2
 PEER_IP=$3

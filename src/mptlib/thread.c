@@ -393,6 +393,22 @@ void * cmd_read_thread(void *arg)
                         else if(cp->mpath[i].deadtimer > 0 && cp->mpath[i].last_keepalive + cp->mpath[i].deadtimer < time(NULL) &&
                            cp->mpath[i].status == STAT_OK) {
                             printf("no keepalive received\n");
+    char  lipstr[128], ripstr[128];
+
+    char c, buff[32];
+
+    memcpy(&buff[0], cp->mpath[i].ip_public, SIZE_IN6ADDR);
+    memcpy(&buff[16], cp->mpath[i].ip_remote, SIZE_IN6ADDR);
+
+    if (cp->mpath[i].ip_version == 6) {
+            inet_ntop(AF_INET6, &buff[16], ripstr, 128);
+            inet_ntop(AF_INET6, &buff[0], lipstr, 128);
+    } else {
+            inet_ntop(AF_INET, &buff[28], ripstr, 128);
+            inet_ntop(AF_INET, &buff[12], lipstr, 128);
+    }
+
+                            printf("path [type: %s ] (%s -> %s) change status to down\n", cp->mpath[i].ip_version == 6 ? "IPv6" : "IPv4", lipstr, ripstr);
                             path_change_status(cp, i, STAT_PATH_DOWN);
                         }
                     }
@@ -423,7 +439,9 @@ void * cmd_read_thread(void *arg)
                 usleep(5000);
                 sendto(sock, lbuff, 4, 0, (struct sockaddr *)&client, csize);   // mark end of data stream
                 continue;
-            }
+            } else {
+               printf("   Not Local cmd\n" );
+	    }
 
 // as getcmd checks the command, here we can omit this checking
 /********            if ((unsigned char)buff[0] < 0xA0 ) {

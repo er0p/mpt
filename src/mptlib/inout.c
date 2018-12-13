@@ -6,7 +6,7 @@
  * @date 2012.08.15.
  */
 
-//#define MPT_DEBUG
+#define MPT_DEBUG
 
 #include <dirent.h>
 #include <inttypes.h>
