@@ -232,8 +232,8 @@ int handshake(connection_type *conn, bit_32 *peer_addr, bit_8 cmd, char status, 
     authSet(conn, cmdbuf, blen);
 
     i = 0; ret = -1;
-    while ((i<=5) && (ret<0)) {
-        if (i) usleep(5000);
+    while ((i<=15) && (ret<0)) {
+        if (i) usleep(2000);
         ret = sendto(sock, cmdbuf, blen, 0, (struct sockaddr *)&saddr, socksize);
     DEBUG("handshake send round1 ret:%d errno%d (%s)\n", ret, errno, strerror(errno));
         ret = getcmd(sock, rbuf, blen, 0, (struct sockaddr *)&caddr, &csize, 500 );
@@ -261,11 +261,13 @@ int handshake(connection_type *conn, bit_32 *peer_addr, bit_8 cmd, char status, 
 
     i = 0; ret = -1;
     //while ((i<2) && (ret>0)) { // the last send will be repeated, if the peer still answers
-    while ((i<=5) && (ret<0)) {
+    while ((i<=15) && (ret<0)) {
         if (i) usleep(2000);
         ret = sendto(sock, cmdbuf, blen, 0, (struct sockaddr *)&saddr, socksize);
     DEBUG("handshake send round3 ret:%d errno%d\n", ret, errno);
         ret = getcmd(sock, rbuf, blen, 0, (struct sockaddr *)&caddr, &csize, 500);
+    DEBUG("handshake recv round3 ret:%d errno%d (%s)\n", ret, errno, strerror(errno));
+        i++;
         i++;
     }
     if (ret < 0) {
