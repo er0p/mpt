@@ -235,8 +235,9 @@ int handshake(connection_type *conn, bit_32 *peer_addr, bit_8 cmd, char status, 
     while ((i<=5) && (ret<0)) {
         if (i) usleep(5000);
         ret = sendto(sock, cmdbuf, blen, 0, (struct sockaddr *)&saddr, socksize);
-    DEBUG("handshake send round1 ret:%d errno%d\n", ret, errno);
+    DEBUG("handshake send round1 ret:%d errno%d (%s)\n", ret, errno, strerror(errno));
         ret = getcmd(sock, rbuf, blen, 0, (struct sockaddr *)&caddr, &csize, 500 );
+    DEBUG("handshake recv round1 ret:%d errno%d (%s)\n", ret, errno, strerror(errno));
         i++;
     }
 
