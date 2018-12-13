@@ -12,9 +12,11 @@
 
 #include "cli.h"
 
+#include "mp_local.h"
+#define MPT_DEBUG
+
 #ifdef MPT_SERVER
 #include "multipath.h"
-#include "mp_local.h"
 #endif
 
 /**
@@ -602,7 +604,13 @@ int getcmd(int sock, char *buff, int blen, int flags,
     ret = 0;
     ret=recvfrom(sock, buff, blen, flags, saddr, ssize);
 
-    if (ret <= 0) return(-1);
+    if (ret < 0) {
+            DEBUG("%s[%d] (func %s): recvfrom error: %d (%s)\n", __FILE__, __LINE__, __func__, errno, strerror(errno));
+	    return(-1);
+    }
+    if(ret == 0) {
+            DEBUG("%s[%d] (func %s): recvfrom return 0\n");
+    }
 
     if ((unsigned char)buff[0] < 0xA0) {
 //           Here we can accept resent GRE in UDP data

@@ -189,7 +189,7 @@ DEBUG("conn_read_memory finished\n");
  * @endmsc
 }
  */
-int handshake(connection_type *conn, bit_32 *peer_addr, bit_8 cmd, char status, int * size, char * buff)
+int handshake(connection_type *conn, bit_32 *local_addr, bit_32 *peer_addr, bit_8 cmd, char status, int * size, char * buff)
 {
 //    path_type *path;
     char auth_len = 0;
@@ -230,9 +230,30 @@ int handshake(connection_type *conn, bit_32 *peer_addr, bit_8 cmd, char status, 
     csize = socksize;
 
     authSet(conn, cmdbuf, blen);
+#define SET_SOURCE_IP
+#ifdef SET_SOURCE_IP
+caddr.sin6_family = AF_INET6;
+memcpy(&caddr.sin6_addr,  local_addr, SIZE_IN6ADDR);
+saddr.sin6_port = 0;
 
+if ( bind(sock, &caddr, sizeof(caddr)) == -1 ) {
+	DEBUG("bind() failed, errno: %d (%s)\n", errno, strerror(errno));
+	return 0;
+}
+#endif
+//    *inet_ntop(int af, const void *src, char *dst, socklen_t size);
+
+    char buf1[INET6_ADDRSTRLEN], buf2[INET6_ADDRSTRLEN];
+    memset(buf1,0,INET6_ADDRSTRLEN);
+    memset(buf2,0,INET6_ADDRSTRLEN);
+    if( inet_ntop(AF_INET6, &(caddr.sin6_addr), buf1, INET6_ADDRSTRLEN) &&
+	inet_ntop(AF_INET6, &(saddr.sin6_addr), buf2, INET6_ADDRSTRLEN) 
+      ) {
+	    DEBUG("src: [%s] -> dst: [%s]\n", buf1, buf2);
+    }
+	    
     i = 0; ret = -1;
-    while (ret<0 && ( errno == EAGAIN || errno == EWOULDBLOCK)) {
+    while (ret<0 && ( errno == EAGAIN || errno == EWOULDBLOCK )) {
     //while ((i<=5) && (ret<0)) {
         if (i) usleep(2000);
         ret = sendto(sock, cmdbuf, blen, 0, (struct sockaddr *)&saddr, socksize);
@@ -347,7 +368,7 @@ int path_change_status(connection_type *conn, int pind, bit_8 lstatus)
         path[pind].status = lstatus;
     }
 */
-    c = handshake(conn, conn->mpath[gind].ip_remote, CMD_P_STATUS_CHANGE, rstatus, &size, buff);
+    c = handshake(conn, conn->mpath[gind].ip_private, conn->mpath[gind].ip_remote, CMD_P_STATUS_CHANGE, rstatus, &size, buff);
     if (c) {
         fprintf(stderr, "Path change status handshake returned with error code %d \n", c);
     }
@@ -498,6 +519,7 @@ int conn_create(connection_type *conn) {
 
     int size, gind, h;
     bit_32 *peer_addr;
+    bit_32 *local_addr;
     connection_type *newconn;
     char lipstr[128];
     path_type *path;
@@ -507,15 +529,21 @@ int conn_create(connection_type *conn) {
     size = connection_write_memory(buff, conn, SIZE_DGRAM);
 
     path = &(conn->mpath[0]);
-    gind=0; peer_addr = NULL;
+    gind=0; peer_addr = NULL, local_addr = NULL;
 
     if (conn->default_cmd_path) {
         while ( (gind < conn->path_count) && (conn->default_cmd_path != path+gind) ) gind++;
-        if ( (path[gind].status == STAT_OK) || (path[gind].status == STAT_PATH_DOWN) ) peer_addr = path[gind].ip_remote;
+        if ( (path[gind].status == STAT_OK) || (path[gind].status == STAT_PATH_DOWN) ) {
+		local_addr = path[gind].ip_private;
+		peer_addr = path[gind].ip_remote;
+	}
     }
     if (!peer_addr) {
-        while ((gind<conn->path_count) && (path[gind].status != STAT_OK) && (path[gind].status != STAT_PATH_DOWN) )  gind++;
-        if (gind<conn->path_count) peer_addr = path[gind].ip_remote;
+        while ((gind < conn->path_count) && (path[gind].status != STAT_OK) && (path[gind].status != STAT_PATH_DOWN) )  gind++;
+        if (gind<conn->path_count) {
+		local_addr = path[gind].ip_private;
+		peer_addr = path[gind].ip_remote;
+	}
     }
 
     if (!peer_addr) {
@@ -529,7 +557,7 @@ int conn_create(connection_type *conn) {
         return(4);
     }
 
-    h = handshake(conn, peer_addr, CMD_CONNECTION_CREATE, 0, &size, buff);
+    h = handshake(conn, local_addr, peer_addr, CMD_CONNECTION_CREATE, 0, &size, buff);
     if (h) {
         printf("Connection create unsuccessful, return code: %d\n", h);
         if (h==5) printf("Connection already exists on the server.\n");
