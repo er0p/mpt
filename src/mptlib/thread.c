@@ -256,7 +256,7 @@ BUFF_UNLOCK_LABEL:
                             }
                             path->status = STAT_OK;
                             path->last_keepalive = time(NULL);
-                            fprintf(stderr, "Path status changed to 0x%02X (%s -> %s) \n", STAT_OK, lipstr, ripstr);
+                            fprintf(stderr, "1: Path status changed to 0x%02X (%s -> %s) \n", STAT_OK, lipstr, ripstr);
                         }
                   }
                 continue;
@@ -439,10 +439,7 @@ void * cmd_read_thread(void *arg)
                 usleep(5000);
                 sendto(sock, lbuff, 4, 0, (struct sockaddr *)&client, csize);   // mark end of data stream
                 continue;
-            } else {
-               printf("   Not Local cmd\n" );
-	    }
-
+            }
 // as getcmd checks the command, here we can omit this checking
 /********            if ((unsigned char)buff[0] < 0xA0 ) {
                 inet_ntop(AF_INET6, &client.sin6_addr, ripstr, 128);

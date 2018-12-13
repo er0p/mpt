@@ -121,7 +121,7 @@ DEBUG("conn_read_memory finished\n");
                         inet_ntop(AF_INET, &buff[sh+68], lipstr, 128);
                         inet_ntop(AF_INET, &buff[sh+52],  ripstr, 128);
                     }
-                    fprintf(stderr, "Path status changed to 0x%02X (%s -> %s) \n", value, lipstr, ripstr);
+                    fprintf(stderr, "2: Path status changed to 0x%02X (%s -> %s) \n", value, lipstr, ripstr);
             }
         } // for
 
@@ -348,7 +348,7 @@ int path_change_status(connection_type *conn, int pind, bit_8 lstatus)
         fprintf(stderr, "Path change status handshake returned with error code %d \n", c);
     }
     buff[1] = c;
-    fprintf(stderr, "Path status changed to 0x%02X (%s -> %s) \n", lstatus, lipstr, ripstr);
+    fprintf(stderr, "3: Path status changed to 0x%02X (%s -> %s) \n", lstatus, lipstr, ripstr);
     path[pind].status = lstatus;
     if ( lstatus == STAT_OK ) { // reset the keepalive timer, if came up
     path[pind].last_keepalive = time(NULL);
