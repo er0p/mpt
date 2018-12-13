@@ -234,12 +234,13 @@ int handshake(connection_type *conn, bit_32 *local_addr, bit_32 *peer_addr, bit_
 #ifdef SET_SOURCE_IP
 caddr.sin6_family = AF_INET6;
 memcpy(&caddr.sin6_addr,  local_addr, SIZE_IN6ADDR);
-saddr.sin6_port = 0;
+caddr.sin6_port = 0;
 
-if ( bind(sock, &caddr, sizeof(caddr)) == -1 ) {
-	DEBUG("bind() failed, errno: %d (%s)\n", errno, strerror(errno));
+//if ( bind(sock, (struct sockaddr*)&caddr, sizeof(caddr)) == -1 ) {
+//	DEBUG("bind() failed, errno: %d (%s)\n", errno, strerror(errno));
+//	close(sock);
 	return 0;
-}
+//}
 #endif
 //    *inet_ntop(int af, const void *src, char *dst, socklen_t size);
 
@@ -253,8 +254,8 @@ if ( bind(sock, &caddr, sizeof(caddr)) == -1 ) {
     }
 	    
     i = 0; ret = -1;
-    while (ret<0 && ( errno == EAGAIN || errno == EWOULDBLOCK )) {
-    //while ((i<=5) && (ret<0)) {
+    //while (ret<0 && ( errno == EAGAIN || errno == EWOULDBLOCK )) {
+    while ((i<=5) && (ret<0)) {
         if (i) usleep(2000);
         ret = sendto(sock, cmdbuf, blen, 0, (struct sockaddr *)&saddr, socksize);
     DEBUG("handshake send round1 ret:%d errno%d (%s)\n", ret, errno, strerror(errno));
@@ -283,8 +284,8 @@ if ( bind(sock, &caddr, sizeof(caddr)) == -1 ) {
 
     i = 0; ret = -1;
     //while ((i<2) && (ret>0)) { // the last send will be repeated, if the peer still answers
-    while (ret<0 && ( errno == EAGAIN || errno == EWOULDBLOCK)) {
-    //while ((i<=5) && (ret<0)) {
+    //while (ret<0 && ( errno == EAGAIN || errno == EWOULDBLOCK)) {
+    while ((i<=5) && (ret<0)) {
         if (i) usleep(2000);
         ret = sendto(sock, cmdbuf, blen, 0, (struct sockaddr *)&saddr, socksize);
     DEBUG("handshake send round3 ret:%d errno%d\n", ret, errno);
